@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>НОД и диофантовы уравнения — шаг за шагом</title>
+<style>
+:root{--bg:#f7f5ff;--fg:#1f1b2e;--card:#fff;--muted:#6a6585;--line:#e3def5;--acc:#6c4ff0;--acc2:#e8e2ff;--ok:#16a06a;--okbg:#e2f7ee;--warn:#fff3d6;--code:#f1eefc;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15121f;--fg:#ece8fa;--card:#1f1b2e;--muted:#a49fc0;--line:#352f4d;--acc:#9d85ff;--acc2:#2c2548;--ok:#4fd6a0;--okbg:#17332a;--warn:#3a3118;--code:#272240}}
+:root[data-theme="dark"]{--bg:#15121f;--fg:#ece8fa;--card:#1f1b2e;--muted:#a49fc0;--line:#352f4d;--acc:#9d85ff;--acc2:#2c2548;--ok:#4fd6a0;--okbg:#17332a;--warn:#3a3118;--code:#272240}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.7rem;line-height:1.25;margin:.4em 0 .2em}
+h2{font-size:1.3rem;margin:0 0 .5em;color:var(--acc)}
+h3{font-size:1.05rem;margin:1.2em 0 .4em}
+.sub{color:var(--muted);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:16px 0}
+.big{background:var(--acc2);border-color:transparent}
+.tag{display:inline-block;background:var(--acc);color:#fff;border-radius:99px;padding:2px 12px;font-size:.8rem;font-weight:600}
+.m{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--code);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.eq{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--code);border-radius:10px;padding:10px 12px;margin:8px 0;overflow-x:auto;line-height:1.9}
+.step{display:flex;gap:12px;margin-top:18px}
+.n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.9rem;margin-top:2px}
+.step>div{min-width:0;flex:1}
+.step h3{margin-top:0}
+.tw{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+td.c{font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
+details{background:var(--warn);border-radius:12px;padding:10px 14px;margin:10px 0}
+summary{cursor:pointer;font-weight:600}
+details p{margin:.6em 0 0}
+.ok{background:var(--okbg);border-left:4px solid var(--ok);border-radius:10px;padding:10px 14px;margin:10px 0}
+.hl{color:var(--acc);font-weight:700}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+nav a{background:var(--card);border:1px solid var(--line);color:var(--fg);text-decoration:none;border-radius:99px;padding:6px 14px;font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<span class="tag">Объясняем как пятилетнему</span>
+<h1>НОД и диофантовы уравнения — шаг за шагом</h1>
+<p class="sub">Три примера из твоего файла. В каждом шаге объясняем, что делаем и почему.</p>
+<nav><a href="#p8">Пример 8</a><a href="#p10">Пример 10</a><a href="#p24">Пример 24</a></nav>
+
+<div class="card big">
+<h2>Главная идея</h2>
+<p>Если у двух чисел нет общих делителей, кроме 1 (<b>НОД = 1</b>), то из них можно «собрать» единицу: <span class="m">a·x + b·y = 1</span>, где x и y — целые (могут быть и отрицательными). А из единицы легко получить любое число: просто умножаем на него. Это ключ ко всем трём примерам.</p>
+<details><summary>Словарик</summary>
+<p><b>НОД</b> — самое большое число, на которое оба числа делятся без остатка. НОД(12, 18) = 6.</p>
+<p><b>Деление с остатком:</b> 7 = 2·3 + 1 (7 конфет, 2 друга: по 3 каждому, 1 остаётся).</p>
+<p><b>Целые числа</b> — …, −2, −1, 0, 1, 2, … (без дробей). <span class="m">t ∈ Z</span> значит «t — любое целое».</p>
+</details>
+</div>
+
+<section class="card" id="p8">
+<h2>Пример 8. НОД(733, 1998) и его линейное представление</h2>
+<p>Задача: найти НОД и записать его в виде <span class="m">733·u + 1998·v</span>.</p>
+
+<div class="step"><span class="n">1</span><div>
+<h3>Алгоритм Евклида: делим с остатком по цепочке</h3>
+<p>Делим большее на меньшее. Потом меньшее делим на остаток. Потом остаток на новый остаток. И так до нуля.</p>
+<div class="tw"><table>
+<tr><th>Запись</th><th>Что произошло</th></tr>
+<tr><td class="c">1998 = 733·2 + 532</td><td>733 влезает в 1998 дважды (1466), осталось 532</td></tr>
+<tr><td class="c">733 = 532·1 + 201</td><td>теперь делим 733 на прошлый остаток 532</td></tr>
+<tr><td class="c">532 = 201·2 + 130</td><td>делим на новый остаток 201</td></tr>
+<tr><td class="c">201 = 130·1 + 71</td><td>то же самое</td></tr>
+<tr><td class="c">130 = 71·1 + 59</td><td>то же самое</td></tr>
+<tr><td class="c">71 = 59·1 + 12</td><td>то же самое</td></tr>
+<tr><td class="c">59 = 12·4 + 11</td><td>12 влезает в 59 четыре раза (48), осталось 11</td></tr>
+<tr><td class="c">12 = 11·1 + 1</td><td>остаток стал 1</td></tr>
+<tr><td class="c">11 = 1·11 + 0</td><td>остаток 0 — <b>стоп</b></td></tr>
+</table></div>
+<div class="ok">Последний остаток, не равный нулю, — это НОД. Здесь это <b>1</b>, значит НОД(1998, 733) = 1.</div>
+<details><summary>Почему можно менять пару чисел на пару поменьше?</summary>
+<p>Остаток считается так: r = a − b·q. Любое число, которое делит и a, и b, делит и r. И наоборот: то, что делит b и r, делит a. Значит у пар (a, b) и (b, r) одни и те же общие делители, а НОД не меняется. Числа становятся всё меньше, пока одно не поделится на другое нацело.</p></details>
+<details><summary>Почему последний ненулевой остаток — это НОД?</summary>
+<p>Когда остаток равен 0, меньшее число делит большее нацело. Тогда НОД этой пары — просто меньшее число, то есть последний ненулевой остаток.</p></details>
+</div></div>
+
+<div class="step"><span class="n">2</span><div>
+<h3>Из каждой строки выражаем остаток</h3>
+<p>Каждую строку переписываем так: остаток = делимое − делитель·частное.</p>
+<div class="eq">1 = 12 − 11·1<br>11 = 59 − 12·4<br>12 = 71 − 59<br>59 = 130 − 71<br>71 = 201 − 130<br>130 = 532 − 201·2<br>201 = 733 − 532<br>532 = 1998 − 733·2</div>
+<p>Зачем? Нам нужна единица, но выраженная через 733 и 1998, а не через промежуточные остатки. Эти равенства — «запасные части» для замены.</p>
+</div></div>
+
+<div class="step"><span class="n">3</span><div>
+<h3>Идём «с конца»: подставляем и собираем</h3>
+<p>Начинаем с <span class="m">1 = 12 − 11</span>. Число 11 — лишний промежуточный остаток, заменяем его из строки выше. Потом так же заменяем следующий лишний, и так до 733 и 1998.</p>
+<div class="tw"><table>
+<tr><th>Что подставили</th><th>Что получилось</th></tr>
+<tr><td class="c">11 = 59 − 12·4</td><td class="c">1 = 12 − (59 − 12·4) = 12·5 − 59</td></tr>
+<tr><td class="c">12 = 71 − 59</td><td class="c">1 = (71−59)·5 − 59 = 71·5 − 59·6</td></tr>
+<tr><td class="c">59 = 130 − 71</td><td class="c">1 = 71·5 − (130−71)·6 = 71·11 − 130·6</td></tr>
+<tr><td class="c">71 = 201 − 130</td><td class="c">1 = (201−130)·11 − 130·6 = 201·11 − 130·17</td></tr>
+<tr><td class="c">130 = 532 − 201·2</td><td class="c">1 = 201·11 − (532−201·2)·17 = 201·45 − 532·17</td></tr>
+<tr><td class="c">201 = 733 − 532</td><td class="c">1 = (733−532)·45 − 532·17 = 733·45 − 532·62</td></tr>
+<tr><td class="c">532 = 1998 − 733·2</td><td class="c">1 = 733·45 − (1998−733·2)·62 = <span class="hl">733·169 − 1998·62</span></td></tr>
+</table></div>
+<details><summary>Откуда взялись числа вроде 5, 11, 45, 169?</summary>
+<p>Это собранные «одинаковые слагаемые». Например, в первой строке: 12 − 59 + 12·4 = 12·(1+4) − 59 = 12·5 − 59. Последняя: 733·45 + 733·2·62 = 733·(45 + 124) = 733·169. На каждом шаге просто раскрываем скобки и складываем то, что стоит при одинаковом числе.</p></details>
+</div></div>
+
+<div class="step"><span class="n">4</span><div>
+<h3>Проверка</h3>
+<div class="eq">169·733 = 123 877<br>62·1998 = 123 876<br>123 877 − 123 876 = 1 ✓</div>
+<div class="ok"><b>Ответ:</b> НОД = 1 = 733·169 + 1998·(−62), то есть u = 169, v = −62. Такая пара не единственная: можно прибавить 1998 к u и вычесть 733 из v.</div>
+</div></div>
+</section>
+
+<section class="card" id="p10">
+<span class="tag">Метод 1</span>
+<h2>Пример 10. Решить 47x − 111y = 89</h2>
+<p>Нужны <b>целые</b> x и y. Просто выразить x = (89 + 111y)/47 нельзя: при большинстве y получится дробь. Поэтому используем НОД.</p>
+
+<div class="step"><span class="n">1</span><div>
+<h3>Проверяем: есть ли решение вообще</h3>
+<p>НОД(47, 111) = 1, а 89 делится на 1. Значит решение есть.</p>
+<details><summary>Почему это нужно проверять?</summary>
+<p>Левая часть ax + by всегда делится на НОД(a, b). Если c на него не делится, решений нет. Пример: 2x + 4y = 7 — слева всегда чётное, справа нечётное.</p></details>
+</div></div>
+
+<div class="step"><span class="n">2</span><div>
+<h3>Алгоритм Евклида для 111 и 47</h3>
+<div class="eq">111 = 47·2 + 17<br>47 = 17·2 + 13<br>17 = 13·1 + 4<br>13 = 4·3 + 1<br>4 = 1·4 + 0</div>
+<p>Последний ненулевой остаток — 1, это подтверждает НОД = 1.</p>
+</div></div>
+
+<div class="step"><span class="n">3</span><div>
+<h3>Получаем единицу из 47 и 111 (идём с конца)</h3>
+<div class="eq">1 = 13 − 4·3<br>4 = 17 − 13 ⟹ 1 = 13 − (17−13)·3 = 13·4 − 17·3<br>13 = 47 − 17·2 ⟹ 1 = (47−17·2)·4 − 17·3 = 47·4 − 17·11<br>17 = 111 − 47·2 ⟹ 1 = 47·4 − (111−47·2)·11 = <span class="hl">47·26 − 111·11</span></div>
+<p>Проверка: 47·26 = 1222, 111·11 = 1221, разность 1 ✓.</p>
+</div></div>
+
+<div class="step"><span class="n">4</span><div>
+<h3>Превращаем «1» в «89»</h3>
+<p>Мы умеем получать 1, а нужно 89. Умножаем обе части на 89:</p>
+<div class="eq">47·(89·26) − 111·(89·11) = 89</div>
+<p>Значит, одно решение: <span class="m">x₀ = 89·26 = 2314</span>, <span class="m">y₀ = 89·11 = 979</span>.</p>
+</div></div>
+
+<div class="step"><span class="n">5</span><div>
+<h3>Находим все решения</h3>
+<p>К x прибавляем 111·t, к y прибавляем 47·t:</p>
+<div class="eq">47·(x₀ + 111t) − 111·(y₀ + 47t) = 89 + 47·111t − 111·47t = 89 ✓</div>
+<details><summary>Почему именно 111 и 47?</summary>
+<p>Добавка к левой части: 47·111t − 111·47t. Это одно и то же произведение со знаком плюс и минус, они взаимно уничтожаются, и равенство не портится. Так можно двигаться и вперёд (t &gt; 0), и назад (t &lt; 0).</p></details>
+<div class="ok"><b>Ответ:</b> x = 2314 + 111t, y = 979 + 47t, где t — любое целое.<br>Проверим t = 1: x = 2425, y = 1026. 47·2425 = 113 975, 111·1026 = 113 886, разность 89 ✓.</div>
+</div></div>
+</section>
+
+<section class="card" id="p24">
+<span class="tag">Метод 2</span>
+<h2>Пример 24. Решить 31x − 23y = 11</h2>
+<p>Идея: вместо обратной подстановки раскладываем дробь 31/23 в «цепочку» (цепную дробь) и заполняем таблицу. Готовые числа из таблицы сразу дают решение.</p>
+
+<div class="step"><span class="n">1</span><div>
+<h3>Решение есть?</h3>
+<p>НОД(31, 23) = 1, а 11 делится на 1. Да, решение есть. (Общее правило: ax − by = c решается, если c делится на НОД(a, b).)</p>
+</div></div>
+
+<div class="step"><span class="n">2</span><div>
+<h3>Раскладываем 31/23 в цепочку</h3>
+<p>Делим с остатком, как у Евклида, но выписываем только «сколько раз влезло»:</p>
+<div class="eq">31 = 23·<b>1</b> + 8<br>23 = 8·<b>2</b> + 7<br>8 = 7·<b>1</b> + 1<br>7 = 1·<b>7</b> + 0</div>
+<p>Звенья цепочки: <span class="m">a = 1, 2, 1, 7</span>. Они идут в строку a<sub>k</sub> таблицы.</p>
+</div></div>
+
+<div class="step"><span class="n">3</span><div>
+<h3>Заполняем таблицу P и Q</h3>
+<p>Правило одно для обеих строк: <b>новое = звено · предыдущее + предпредыдущее</b>. Стартовые значения: P = 1, 1 и Q = 0, 1.</p>
+<div class="tw"><table>
+<tr><th>k</th><th>−1</th><th>0</th><th>1</th><th>2</th><th>3</th></tr>
+<tr><td>a<sub>k</sub></td><td></td><td>1</td><td>2</td><td>1</td><td>7</td></tr>
+<tr><td>P<sub>k</sub></td><td>1</td><td>1</td><td>3</td><td>4</td><td>31</td></tr>
+<tr><td>Q<sub>k</sub></td><td>0</td><td>1</td><td>2</td><td>3</td><td>23</td></tr>
+</table></div>
+<p>Считаем: P₁ = 2·1 + 1 = 3, Q₁ = 2·1 + 0 = 2. P₂ = 1·3 + 1 = 4, Q₂ = 1·2 + 1 = 3. P₃ = 7·4 + 3 = 31, Q₃ = 7·3 + 2 = 23.</p>
+<div class="ok">В последнем столбце получились сами числа 31 и 23. Это контроль: таблица заполнена верно, и k = 3 — последний шаг.</div>
+</div></div>
+
+<div class="step"><span class="n">4</span><div>
+<h3>Берём предпоследнюю дробь P₂/Q₂ = 4/3</h3>
+<p>Нам нужна дробь на шаг раньше последней. У неё есть важное свойство: <span class="m">31·3 − 23·4 = 93 − 92 = 1</span>. Это и есть «единица из 31 и 23», которую нам давал обратный ход в методе 1.</p>
+<details><summary>Почему именно предпоследняя и при чём тут знак (−1)?</summary>
+<p>У соседних дробей цепочки всегда P<sub>k</sub>·Q<sub>k−1</sub> − Q<sub>k</sub>·P<sub>k−1</sub> = ±1, и знак чередуется: (−1)<sup>k−1</sup>. Здесь k = 3, значит (−1)² = +1, и получаем ровно +1. При чётном k знак был бы −1, и нужно было бы поменять знак у решения.</p></details>
+</div></div>
+
+<div class="step"><span class="n">5</span><div>
+<h3>Подставляем в формулу</h3>
+<p>Мы получили 1, а нужно 11. Умножаем на 11 (как раньше на 89). Прибавки: к x прибавляем b = 23, к y прибавляем a = 31, чтобы всё сократилось, как в примере 10.</p>
+<div class="eq">x = (−1)²·11·3 + 23t = <span class="hl">33 + 23t</span><br>y = (−1)²·11·4 + 31t = <span class="hl">44 + 31t</span></div>
+</div></div>
+
+<div class="step"><span class="n">6</span><div>
+<h3>Проверка</h3>
+<div class="eq">31·(33 + 23t) − 23·(44 + 31t)<br>= 1023 + 31·23t − 1012 − 23·31t<br>= 1023 − 1012 = 11 ✓</div>
+<div class="ok"><b>Ответ:</b> x = 33 + 23t, y = 44 + 31t, t — любое целое.</div>
+</div></div>
+</section>
+
+<section class="card big">
+<h2>Два метода рядом</h2>
+<div class="tw"><table>
+<tr><th></th><th>Метод 1 (пример 10)</th><th>Метод 2 (пример 24)</th></tr>
+<tr><td>Как получаем 1</td><td>идём с конца Евклида и подставляем</td><td>берём готовые числа из таблицы</td></tr>
+<tr><td>Плюс</td><td>понятно, откуда всё берётся</td><td>быстро, мало записей</td></tr>
+<tr><td>Минус</td><td>много подстановок, легко ошибиться</td><td>нужно помнить правило таблицы и знак</td></tr>
+</table></div>
+<p>Дальше у обоих методов одно и то же: умножить на c, добавить «t-шаги», проверить.</p>
+</section>
+</main>
+</body>
+</html>
